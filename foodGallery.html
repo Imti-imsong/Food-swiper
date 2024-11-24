@@ -145,13 +145,18 @@
 
     <!-- Bottom Navigation Bar -->
     <div class="nav-bar">
-      <button class="active">Gallery</button>
-      <button onclick="navigateTo('dishManager.html')">Add Dish</button>
-      <button onclick="navigateTo('settings.html')">Settings</button>
-    </div>
+  <button onclick="navigateTo('foodGallery.html')" class="active">Gallery</button>
+  <button onclick="navigateTo('index.html')">Add Dish</button>
+  <button onclick="navigateTo('settings.html')">Settings</button>
+</div>
+
   </div>
 
   <script>
+    function navigateTo(page) {
+  window.location.href = page;
+}
+
     const gallery = document.querySelector('.gallery');
     let dishes = JSON.parse(localStorage.getItem('dishes')) || [];
     let currentIndex = 0;
