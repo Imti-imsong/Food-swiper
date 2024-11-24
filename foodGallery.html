@@ -15,79 +15,80 @@
     body {
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
       background-color: #f9f9f9;
       font-family: Arial, sans-serif;
       height: 100vh;
-      margin: 0;
       overflow: hidden;
     }
 
-    .gallery-frame {
+    .frame {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      height: 100%;
+      justify-content: center;
       width: 100%;
-      max-width: 500px; /* Limit size for larger screens */
-      margin: auto;
-      position: relative;
+      max-width: 500px;
+      height: 100%;
       background: #ffffff;
-      border: 1px solid #ddd;
       border-radius: 10px;
       overflow: hidden;
+      position: relative;
     }
 
-    .swipe-note {
+    /* Gallery Container */
+    .gallery-container {
+      flex-grow: 1;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .gallery-note {
       position: absolute;
       top: 10px;
       right: 10px;
-      background-color: #333;
-      color: #fff;
+      font-size: 12px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
       padding: 5px 10px;
       border-radius: 5px;
-      font-size: 12px;
       z-index: 10;
     }
 
+    /* Swipeable Dish Card */
     .dish-card {
+      position: absolute;
+      width: 90%;
+      height: 80%;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       display: flex;
       flex-direction: column;
-      align-items: center;
       justify-content: flex-start;
-      width: 100%;
-      height: 100%;
-      padding: 10px;
-    }
-
-    .dish-name {
-      width: 100%;
-      margin-bottom: 10px;
-      font-size: 22px;
-      text-align: center;
-      color: #333;
-      background-color: #f9f9f9;
-      padding: 10px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .dish-image-wrapper {
-      width: 100%;
-      aspect-ratio: 1; /* Ensures images have a 1:1 ratio (square) */
-      display: flex;
-      justify-content: center;
       align-items: center;
-      background-color: #f1f1f1;
+      text-align: center;
       overflow: hidden;
-      margin-bottom: 20px;
+      transform-origin: center;
+      transition: transform 0.3s ease, opacity 0.3s ease;
     }
 
-    .dish-image-wrapper img {
+    .dish-card img {
       width: 100%;
-      height: 100%;
-      object-fit: cover; /* Ensures images fill the space uniformly */
+      height: auto;
+      flex-grow: 1;
+    }
+
+    .dish-card h3 {
+      margin: 10px 0;
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
     }
 
     /* Navigation Bar */
@@ -121,112 +122,95 @@
       background: #ff6f61;
       font-weight: bold;
     }
-
-    .nav-info {
-      position: absolute;
-      bottom: 60px; /* To avoid overlap with nav-bar */
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 14px;
-      color: #777;
-    }
   </style>
 </head>
 <body>
-  <div class="gallery-frame">
-    <!-- Swipe Note -->
-    <div class="swipe-note">Swipe for more dishes</div>
+  <div class="frame">
+    <!-- Gallery Note -->
+    <div class="gallery-note">Swipe left or right to explore!</div>
 
-    <!-- Food Gallery -->
-    <div class="gallery">
-      <!-- Dish card -->
-      <div class="nav-info">Swipe left or right to navigate</div>
+    <!-- Gallery Container -->
+    <div class="gallery-container" id="gallery-container">
+      <!-- Cards will be dynamically added -->
     </div>
 
     <!-- Bottom Navigation Bar -->
     <div class="nav-bar">
-  <button onclick="navigateTo('foodGallery.html')" class="active">Gallery</button>
-  <button onclick="navigateTo('index.html')">Add Dish</button>
-  <button onclick="navigateTo('settings.html')">Settings</button>
-</div>
-
+      <button class="active" onclick="window.location.href='food-gallery.html'">Gallery</button>
+      <button onclick="window.location.href='dish-manager.html'">Add Dish</button>
+      <button onclick="window.location.href='settings.html'">Settings</button>
+    </div>
   </div>
 
   <script>
-    function navigateTo(page) {
-  window.location.href = page;
-}
+    // Retrieve data from localStorage
+    const storedDishes = JSON.parse(localStorage.getItem('dishes')) || [];
 
-    const gallery = document.querySelector('.gallery');
-    let dishes = JSON.parse(localStorage.getItem('dishes')) || [];
-    let currentIndex = 0;
-    let startX = 0;
-    let endX = 0;
-
-    // Shuffle the dishes array for random order
-    function shuffleDishes(array) {
+    // Shuffle array for randomness
+    const shuffleArray = (array) => {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
       }
       return array;
-    }
+    };
 
-    // Initialize with shuffled dishes
-    dishes = shuffleDishes(dishes);
+    // Create swipeable cards
+    const galleryContainer = document.getElementById('gallery-container');
+    const shuffledDishes = shuffleArray(storedDishes);
 
-    function renderDish() {
-      gallery.innerHTML = '';
-
-      if (dishes.length === 0) {
-        gallery.innerHTML = '<h2>No dishes added yet. Go add some!</h2>';
-        return;
-      }
-
-      const dish = dishes[currentIndex];
+    shuffledDishes.forEach((dish) => {
       const card = document.createElement('div');
       card.className = 'dish-card';
 
-      card.innerHTML = `
-        <div class="dish-name">${dish.name}</div>
-        <div class="dish-image-wrapper">
-          <img src="${dish.image}" alt="${dish.name}">
-        </div>
-      `;
+      // Dish Name
+      const dishName = document.createElement('h3');
+      dishName.textContent = dish.name;
 
-      gallery.appendChild(card);
-    }
+      // Dish Image
+      const dishImage = document.createElement('img');
+      dishImage.src = dish.image || 'https://via.placeholder.com/300'; // Placeholder if no image uploaded
+      dishImage.alt = dish.name;
 
-    function swipe(direction) {
-      currentIndex = (currentIndex + direction + dishes.length) % dishes.length;
-      renderDish();
-    }
+      // Append to card
+      card.appendChild(dishName);
+      card.appendChild(dishImage);
 
-    // Swipe Event Listeners
-    gallery.addEventListener('touchstart', (event) => {
-      startX = event.touches[0].clientX;
+      // Append card to gallery
+      galleryContainer.appendChild(card);
     });
 
-    gallery.addEventListener('touchmove', (event) => {
-      endX = event.touches[0].clientX;
+    // Swipe functionality
+    let startX, currentCard;
+
+    galleryContainer.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      currentCard = galleryContainer.firstElementChild;
     });
 
-    gallery.addEventListener('touchend', () => {
-      const swipeThreshold = 50; // Minimum distance to trigger swipe
-      if (startX - endX > swipeThreshold) {
-        swipe(1); // Swipe right (next dish)
-      } else if (endX - startX > swipeThreshold) {
-        swipe(-1); // Swipe left (previous dish)
+    galleryContainer.addEventListener('touchmove', (e) => {
+      const diff = e.touches[0].clientX - startX;
+      if (currentCard) currentCard.style.transform = `translateX(${diff}px) rotate(${diff / 20}deg)`;
+    });
+
+    galleryContainer.addEventListener('touchend', (e) => {
+      const diff = e.changedTouches[0].clientX - startX;
+
+      if (diff > 100) {
+        // Swipe right
+        currentCard.style.transform = 'translateX(100vw) rotate(30deg)';
+        currentCard.style.opacity = 0;
+        setTimeout(() => currentCard.remove(), 300);
+      } else if (diff < -100) {
+        // Swipe left
+        currentCard.style.transform = 'translateX(-100vw) rotate(-30deg)';
+        currentCard.style.opacity = 0;
+        setTimeout(() => currentCard.remove(), 300);
+      } else {
+        // Reset position
+        currentCard.style.transform = 'translateX(0) rotate(0)';
       }
     });
-
-    // Navigation Function
-    function navigateTo(page) {
-      window.location.href = page;
-    }
-
-    // Initial render
-    renderDish();
   </script>
 </body>
 </html>
